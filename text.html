@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
+
+</head>
+
+<body>
+    <div id="data">
+    </div>
+    <script>
+        function barChart(group, data, height, width) {
+
+            // Step 2
+            var margin = 10;
+            var parseTime = d3.timeParse("%d/%m/%y");
+            var labels = ['Economy', 'Family', 'Health', 'Freedom', 'Trust', 'Generosity', 'DystopiaResidual'];
+            var time = ['2015', '2016'];
+
+            var colors = ["#0B1354", "#165BAA", "#651B40","#A155B9", "#F765A3", "#FFA4B6", "#F9D1D1"];
+
+            data = data.map(function (d) {
+                return { Time: parseTime(d.Time).getUTCFullYear(), Economy: +d.Economy, Family: +d.Family, Health: +d.Health, Freedom: +d.Freedom, Trust: +d.Trust, Generosity: +d.Generosity, DystopiaResidual: +d.DystopiaResidual };
+            });
+
+            stack = d3.stack().keys(labels)
+
+            stack.value(function (d, key) {
+                return d[key];
+            });
+
+            dataset = stack(data);
+
+            dataset.forEach(level => {
+                var cont = 0;
+                level.forEach(year => {
+                    if (cont == 0) {
+                        year.push('2015');
+                        cont = 1;
+                    }
+                    else if (cont == 1) {
+                        year.push('2016');
+                        cont = 1;
+                    }
+                })
+            })
+
+            console.log(dataset);
+
+            // Step 3
+            var xScale = d3.scaleBand()
+                .domain(time)
+                .rangeRound([0, width], 5)
+                .padding(.5);
+
+            var yScale = d3.scaleLinear()
+                .domain([0, 10])
+                .range([height, 0]);
+
+            // Step 4
+            var yAxis = d3.axisLeft(yScale);
+
+            var xAxis = d3.axisBottom(xScale);
+
+            group.append("g")
+                .attr("class", "y axis")
+                .call(yAxis);
+
+            group.append("g")
+                .attr("class", "x axis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis);
+
+            // Step 5
+            // X label
+            group.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 30)
+                .attr('text-anchor', 'middle')
+                .style('font-family', 'Helvetica')
+                .style('font-size', 12)
+                .text('Year');
+
+            // Y label
+            group.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('transform', 'translate(-30,' + height / 2 + ')rotate(-90)')
+                .style('font-family', 'Helvetica')
+                .style('font-size', 12)
+                .text('Happiness');
+
+            // Step 6
+            var groupsBar = group.selectAll("g.bars")
+                .data(dataset)
+                .enter().append("g")
+                .attr("class", "bars")
+                .style("fill", function (d, i) { return colors[i]; });
+
+            var rect = groupsBar.selectAll("rect")
+                .data(function (d) { return d; })
+                .enter()
+                .append("rect")
+                .attr("x", function (d) { return xScale(d[2]); })
+                .attr("y", function (d) { return yScale(d[1]); })
+                .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
+                .attr("width", xScale.bandwidth())
+
+                groupsBar.selectAll("text")
+                .data(labels)
+                .enter()
+                .append("text")
+                .text(function (d, i) { return d })
+                .attr("x", function (d,i) { return i*50; })
+                .attr("y", 10)
+                .style("fill", function (d,i) { return colors[i] });
+
+        }
+
+        function functionName() {
+
+            d3.csv('happy.csv', function (a, i) {
+
+                var box = d3
+                    .select("body")
+                    .append('svg')
+                    .style('width', 1000)
+                    .style('height', 1000)
+                    .style('padding', 500)
+                    .style('background-color', 'rgb(250, 250, 250)');
+
+                var objArray = [];
+
+                i.forEach(obj => {
+
+
+                    objArray.push(obj);
+                })
+                console.log(objArray);
+                barChart(box, objArray, 500, 500)
+            });
+
+        }
+        functionName()
+
+
+
+    </script>
+</body>
+
+</html>

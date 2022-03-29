@@ -22,8 +22,13 @@
       height: 100vh;
     }
 
-    svg rect {
-      fill: #207696;
+    svg {
+      fill: #165BAA;
+      /* map background colour */
+    }
+
+    svg text {
+      fill: #000000;
       /* map background colour */
     }
 
@@ -37,7 +42,7 @@
     }
 
     .country-on {
-      fill: #cf453b;
+      fill: #651B40;
       /* highlight colour for selected country */
     }
 
@@ -52,7 +57,7 @@
     }
 
     .countryLabelBg {
-      fill: #207696;
+      fill: #165BAA;
       /* country label background colour */
     }
 
@@ -63,17 +68,23 @@
       /* country label background colour */
     }
 
-    .title{
+    .title {
       font-family: 'Yanone Kaffeesatz', sans-serif;
-      font-weight: 700;
-      font-size: 1em;
+      font-weight: 1000;
+      font-size: 1.1vw;
     }
 
+    .text1 {
+      font-family: 'Yanone Kaffeesatz', sans-serif;
+      font-weight: 600;
+      font-size: 1vw;
+    }
 
-
-
-
-
+    .text2 {
+      font-family: 'Yanone Kaffeesatz', sans-serif;
+      font-weight: 600;
+      font-size: 0.8vw;
+    }
   </style>
 </head>
 
@@ -262,12 +273,6 @@
 
     function neutralFace(group, xPos, yPos, radius) {
 
-      var lineF = d3.line();
-      var points = [
-        [0, 0],
-        [50, 0]
-      ];
-
       group.append("circle")
         .attr("cx", xPos)
         .attr("cy", yPos)
@@ -290,13 +295,135 @@
 
       //mouth
       group.append("rect")
-        .attr("x", xPos - radius/2)
-        .attr("y", yPos + radius/3 )
+        .attr("x", xPos - radius / 2)
+        .attr("y", yPos + radius / 3)
         .attr("width", radius)
         .attr("height", 1)
         .style("fill", "black");
     }
 
+    function barChart(group, data, height, width) {
+
+      // Step 2
+      var margin = 10;
+      var parseTime = d3.timeParse("%d/%m/%y");
+      var labels = ['Economy', 'Family', 'Health', 'Freedom', 'Trust', 'Generosity', 'DystopiaResidual'];
+      var time = ['2015', '2016'];
+
+      var colors = ["#0B1354", "#165BAA", "#651B40", "#A155B9", "#F765A3", "#FFA4B6", "#F9D1D1"];
+
+      data = data.map(function (d) {
+        return { Time: parseTime(d.Time).getUTCFullYear(), Economy: +d.Economy, Family: +d.Family, Health: +d.Health, Freedom: +d.Freedom, Trust: +d.Trust, Generosity: +d.Generosity, DystopiaResidual: +d.DystopiaResidual };
+      });
+
+      stack = d3.stack().keys(labels)
+
+      stack.value(function (d, key) {
+        return d[key];
+      });
+
+      dataset = stack(data);
+
+      dataset.forEach(level => {
+        var cont = 0;
+        level.forEach(year => {
+          if (cont == 0) {
+            year.push('2015');
+            cont = 1;
+          }
+          else if (cont == 1) {
+            year.push('2016');
+            cont = 1;
+          }
+        })
+      })
+
+      console.log(dataset);
+
+      // Step 3
+      var xScale = d3.scaleBand()
+        .domain(time)
+        .rangeRound([0, width], 5)
+        .padding(.5);
+
+      var yScale = d3.scaleLinear()
+        .domain([0, 10])
+        .range([height, 0]);
+
+      // Step 4
+      var yAxis = d3.axisLeft(yScale);
+
+      var xAxis = d3.axisBottom(xScale);
+
+      group.append("g")
+        .attr("class", "y axis")
+        .attr("transform", "translate(70," + 70 + ")")
+        .call(yAxis);
+
+      group.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(70," + (height + 70) + ")")
+        .call(xAxis);
+
+      // Step 5
+      // X label
+      group.append('text')
+        .attr('x', width / 2)
+        .attr('y', height + 30)
+        .attr('text-anchor', 'middle')
+        .style('font-family', 'Helvetica')
+        .style('font-size', 12)
+        .attr("transform", "translate(70,70)")
+        .text('Year');
+
+      // Y label
+      group.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('transform', 'translate(40,' + (height / 2 + 70) + ')rotate(-90)')
+        .style('font-family', 'Helvetica')
+        .style('font-size', 12)
+        .text('Happiness Score');
+
+      // Step 6
+      var groupsBar = group.selectAll("g.bars")
+        .data(dataset)
+        .enter().append("g")
+        .attr("class", "bars")
+        .style("fill", function (d, i) { return colors[i]; });
+
+      var rect = groupsBar.selectAll("rect")
+        .data(function (d) { return d; })
+        .enter()
+        .append("rect")
+        .attr("x", function (d) { return xScale(d[2]); })
+        .attr("y", function (d) { return yScale(d[1]); })
+        .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
+        .attr("width", xScale.bandwidth())
+        .attr("transform", "translate(70,70)")
+
+      groupsBar.selectAll("text")
+        .data(labels)
+        .enter()
+        .append("text")
+        .text(function (d, i) { return d })
+        .attr("x", function (d, i) { return i * 20; })
+        .attr("y", 10)
+        .attr("transform", "translate(80,100)")
+        .style("fill", function (d, i) { return colors[i] })
+        .style("font-size", '0.3em')
+        .style("font-spacing", '0.2em');
+
+      groupsBar
+        .append("text")
+        .text('Scores: ')
+        .attr("x", 0)
+        .attr("y", 10)
+        .attr("transform", "translate(80,90)")
+        .style("fill", 'black')
+        .style("font-size", '0.5em')
+        .style("font-spacing", '0.3em');
+
+    }
 
     function functionName(selected) {
 
@@ -306,6 +433,7 @@
           .select("#countryLabel" + selected.properties.iso_a3)
           .append('svg');
 
+        var objArray = [];
         var Time = [];
         var Country = [];
         var Region = [];
@@ -330,6 +458,7 @@
 
           if (obj.Country == selected.properties.name) {
 
+            objArray.push(obj);
             Time.push(obj.Time);
             Country.push(obj.Country);
             Region.push(obj.Region);
@@ -350,7 +479,7 @@
             DystopiaRank.push(obj.DystopiaRank);
             DystopiaResidual.push(obj.DystopiaResidual);
 
-            console.log(obj);
+            console.log(objArray);
 
           };
         })
@@ -360,54 +489,84 @@
           .attr("transform", function (d) {
             return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
           })
-          .attr("width", 150)
-          .attr("height", 150)
+          .attr("width", 250)
+          .attr("height", 260)
           .attr('rx', 10)
           .attr('ry', 10);
 
-        if ( parseInt(HappinessRank[0]) < 20){
-          happyFace(box, 130, 20, 10);
+
+        if (parseInt(HappinessRank[0]) < 30) {
+          happyFace(box, 200, 25, 15);
         }
-        else if (parseInt(HappinessRank[0]) < 60){
-          neutralFace(box, 130, 20, 10);
+        else if (parseInt(HappinessRank[0]) < 70) {
+          neutralFace(box, 200, 25, 15);
         }
         else {
-          sadFace(box, 130, 20, 10);
+          sadFace(box, 200, 25, 15);
         }
-        
+
 
         box
           .insert('text')
-          .attr('x', 20)
+          .attr('x', 30)
           .attr('y', 25)
           .attr('class', 'title')
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
           .text('Happiness Rank');
+
+        box.append("rect")
+          .attr("x", 0)
+          .attr("y", 38)
+          .attr("width", 250)
+          .attr("height", 1)
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
+          .style("fill", "black");
 
         box
           .insert('text')
-          .attr('x', 37)
-          .attr('y', 50)
+          .attr('x', 155)
+          .attr('y', 60)
+          .attr('class', 'text1')
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
           .text('2015');
 
         box
           .insert('text')
-          .attr('x', 95)
-          .attr('y', 50)
+          .attr('x', 200)
+          .attr('y', 60)
+          .attr('class', 'text1')
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
           .text('2016');
 
         box
           .insert('text')
-          .attr('x', 41)
-          .attr('y', 70)
+          .attr('x', 165)
+          .attr('y', 80)
+          .attr('class', 'text2')
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
           .text(HappinessRank[0] + '°');
 
         box
           .insert('text')
-          .attr('x', 99)
-          .attr('y', 70)
+          .attr('x', 205)
+          .attr('y', 80)
+          .attr('class', 'text2')
+          .attr("transform", function (d) {
+            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
+          })
           .text(HappinessRank[1] + '°');
 
-
+        barChart(box, objArray, 150, 150)
       });
 
     }
