@@ -434,50 +434,14 @@
           .append('svg');
 
         var objArray = [];
-        var Time = [];
-        var Country = [];
-        var Region = [];
         var HappinessRank = [];
-        var HappinessScore = [];
-        var EconomyRank = [];
-        var Economy = [];
-        var FamilyRank = [];
-        var Family = [];
-        var HealthRank = [];
-        var Health = [];
-        var FreedomRank = [];
-        var Freedom = [];
-        var TrustRank = [];
-        var Trust = [];
-        var GenerosityRank = [];
-        var Generosity = [];
-        var DystopiaRank = [];
-        var DystopiaResidual = [];
 
         i.forEach(obj => {
 
           if (obj.Country == selected.properties.name) {
 
             objArray.push(obj);
-            Time.push(obj.Time);
-            Country.push(obj.Country);
-            Region.push(obj.Region);
             HappinessRank.push(obj.HappinessRank);
-            HappinessScore.push(obj.HappinessScore);
-            EconomyRank.push(obj.EconomyRank);
-            Economy.push(obj.Economy);
-            FamilyRank.push(obj.FamilyRank);
-            Family.push(obj.Family);
-            HealthRank.push(obj.HealthRank);
-            Health.push(obj.Health);
-            FreedomRank.push(obj.FreedomRank);
-            Freedom.push(obj.Freedom);
-            TrustRank.push(obj.TrustRank);
-            Trust.push(obj.Trust);
-            GenerosityRank.push(obj.GenerosityRank);
-            Generosity.push(obj.Generosity);
-            DystopiaRank.push(obj.DystopiaRank);
-            DystopiaResidual.push(obj.DystopiaResidual);
 
             console.log(objArray);
 
