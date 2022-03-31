@@ -69,9 +69,9 @@
     }
 
     .title {
-      font-family: 'Yanone Kaffeesatz', sans-serif;
-      font-weight: 1000;
-      font-size: 1.1vw;
+      font-family: 'Yanone Kaffeesatz-Bold', sans-serif;
+      font-weight: 700;
+      font-size: 1vw;
     }
 
     .text1 {
@@ -340,7 +340,6 @@
 
       console.log(dataset);
 
-      // Step 3
       var xScale = d3.scaleBand()
         .domain(time)
         .rangeRound([0, width], 5)
@@ -350,7 +349,6 @@
         .domain([0, 10])
         .range([height, 0]);
 
-      // Step 4
       var yAxis = d3.axisLeft(yScale);
 
       var xAxis = d3.axisBottom(xScale);
@@ -365,7 +363,6 @@
         .attr("transform", "translate(70," + (height + 70) + ")")
         .call(xAxis);
 
-      // Step 5
       // X label
       group.append('text')
         .attr('x', width / 2)
@@ -384,7 +381,6 @@
         .style('font-size', 12)
         .text('Happiness Score');
 
-      // Step 6
       var groupsBar = group.selectAll("g.bars")
         .data(dataset)
         .enter().append("g")
@@ -448,6 +444,11 @@
           };
         })
 
+        if (HappinessRank.length == 0){
+          HappinessRank.push(' ');
+          HappinessRank.push(' ');
+        }
+
         box.insert("rect", "text")
           .attr("class", "countryLabelBg1")
           .attr("transform", function (d) {
@@ -460,13 +461,13 @@
 
 
         if (parseInt(HappinessRank[0]) < 30) {
-          happyFace(box, 200, 25, 15);
+          happyFace(box, 220, 25, 15);
         }
         else if (parseInt(HappinessRank[0]) < 70) {
-          neutralFace(box, 200, 25, 15);
+          neutralFace(box, 220, 25, 15);
         }
         else {
-          sadFace(box, 200, 25, 15);
+          sadFace(box, 220, 25, 15);
         }
 
 
