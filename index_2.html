@@ -10,7 +10,8 @@
     <title>Map</title>
 </head>
 
-<body>
+<body style="background-color: #2E353E">
+
     <script type="text/javascript">
         // the data
         const geoMap = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
@@ -23,14 +24,18 @@
 
         function updateWindow() {
             x = w.innerWidth;
-            y = w.innerHeight+150;
-            let projection = d3.geoEquirectangular()
-            .scale(x * 0.165)
-            .center([-55, 50]);
+            y = w.innerHeight + 150;
+
+            projection = d3.geoEquirectangular()
+                .scale(x * 0.165)
+                .translate([x / 2, y / 2])
 
             svg.attr("width", x).attr("height", y);
             svg.select('#map').attr("width", x).attr("height", y).selectAll("path").attr("d", d3.geoPath().projection(projection));
+            svg.select('#legend').attr("y", y / 2)
+
         }
+
         d3.select(window).on('resize.updatesvg', updateWindow);
 
         // The svg
@@ -39,6 +44,7 @@
             .attr('width', x)
             .attr('height', y);
 
+        console.log(x, y);
 
         // Map and projection
 
@@ -53,6 +59,7 @@
         let colorScale = d3.scaleThreshold()
             .domain(scale)
             .range(d3.schemeRdYlGn[9]);
+
 
         // Load dados externos para o array
         let promises = [d3.json(geoMap),
@@ -69,7 +76,7 @@
                 .text('World Happiness')
                 .attr("x", 19)
                 .attr("y", 50)
-                .style("fill", 'black')
+                .style("fill", 'white')
                 .style("font-size", '2.3em')
                 .style("font-spacing", '0.3em');
 
@@ -89,7 +96,7 @@
                 .attr("fill", function (d) {
                     // ir buscar a linha correspondente ao país, se não tiver fica em branco
                     if (data[1].find(o => o.code === d['id']) == undefined) {
-                        color = 'gray';
+                        color = 'white';
                     }
                     else {
                         let line = data[1].find(o => o.code === d['id']);
@@ -105,7 +112,7 @@
 
             // Cria os labels
 
-            labels = map
+            labels = svg
                 .selectAll("g")
                 .data(data[0]['features'])
                 .enter()
@@ -130,7 +137,28 @@
                     // TODO add a parte do lado
                 });
 
-
+            labels
+                .append("text")
+                .attr("class", "countryName")
+                .style("text-anchor", "middle")
+                .attr("dx", 0)
+                .attr("dy", 0)
+                .text(function (d) {
+                    return d.properties.name;
+                })
+            // add a background rectangle the same size as the text
+            labels
+                .insert("rect", "text")
+                .attr("class", "countryLabelBg")
+                // .attr("transform", function (d) {
+                //     return "translate(" + (d.bbox.x - 5) + "," + (d.bbox.y - 3) + ")";
+                // })
+                // .attr("width", function (d) {
+                //     return d.bbox.width + 10;
+                // })
+                // .attr("height", function (d) {
+                //     return d.bbox.height + 6;
+                // });
 
 
 
@@ -139,8 +167,9 @@
 
             var legend = svg
                 .append('g')
+                .attr("id", "legend")
                 .attr("x", 20)
-                .attr("y", 450)
+                .attr("y", y / 2)
                 .attr("width", 30)
                 .attr("height", 100)
 
@@ -154,7 +183,7 @@
                 .attr("width", 15)
                 .attr("height", 15)
                 .attr("fill", function (d, i) { return colorScale(d); })
-                .style("stroke", 'black')
+                .style("stroke", 'white')
                 .style("stroke-width", '0.5');
 
             legend.selectAll('g')
@@ -166,7 +195,7 @@
                 .attr("y", function (d, i) { return 460 + i * 20; })
                 .attr("width", 10)
                 .attr("height", 10)
-                .attr("fill", 'black')
+                .attr("fill", 'white')
                 .style("font-size", '0.8em')
                 .style("font-spacing", '0.3em');
 
@@ -175,7 +204,7 @@
                 .text('Happiness Score: ')
                 .attr("x", 19)
                 .attr("y", 435)
-                .style("fill", 'black')
+                .style("fill", 'white')
                 .style("font-size", '0.9em')
                 .style("font-spacing", '0.3em');
 
