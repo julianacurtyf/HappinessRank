@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <script type="text/javascript" src="https://d3js.org/d3.v6.min.js"></script>
@@ -8,9 +9,175 @@
 
     <title>Map</title>
 </head>
+
 <body>
-<svg id="my_map" width="600" height="350"></svg>
-<svg id="my_tree" width="600" height="350"></svg>
-<script type="text/javascript" src="lay_map.js"></script>
+    <script type="text/javascript">
+        // the data
+        const geoMap = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
+        const demographics = "general.csv";
+
+        // update the size of the map
+        var w = window,
+            x = w.innerWidth,
+            y = w.innerHeight;
+
+        function updateWindow() {
+            x = w.innerWidth;
+            y = w.innerHeight;
+
+            svg.attr("width", x).attr("height", y);
+        }
+        d3.select(window).on('resize.updatesvg', updateWindow);
+
+
+        // The svg
+        let svg = d3.select("body")
+            .append('svg')
+            .attr('width', x)
+            .attr('height', y);
+
+
+        // Map and projection
+
+        let path = d3.geoPath();
+
+        let projection = d3.geoEquirectangular()
+            .scale(x * 0.15)
+            .center([-70, 50]);
+
+        let scale = [3.5, 4, 5, 6, 6.5, 7, 7.5, 8, 9];
+
+        let colorScale = d3.scaleThreshold()
+            .domain(scale)
+            .range(d3.schemeRdYlGn[9]);
+
+        // Load dados externos para o array
+        let promises = [d3.json(geoMap),
+        d3.csv(demographics, function (d) { return { country: d.Country, code: d.id, year: +d.Year, rank: +d.HappinessRank, score: +d.HappinessScore, economy: +d.Economy, health: +d.Health, freedom: +d.Freedom, generosity: +d.Generosity, trust: +d.Trust } })];
+
+        Promise.all(promises).then(draw_map);
+
+        console.log(promises);
+
+
+        function draw_map(data) {
+
+            svg.append("text")
+                .text('World Happiness')
+                .attr("x", 19)
+                .attr("y", 50)
+                .style("fill", 'black')
+                .style("font-size", '2.3em')
+                .style("font-spacing", '0.3em');
+
+
+            // Desenha o mapa
+            map = svg.append("g")
+                .attr('width', x)
+                .attr('height', y)
+                .selectAll("path")
+                .data(data[0]['features']) // mapa com as shapes
+                .enter()
+                .append("path")
+                // desenha cada país consoante a projecção definida
+                .attr("d", d3.geoPath().projection(projection))
+                // define a cor consoante a população
+                .attr("fill", function (d) {
+                    // ir buscar a linha correspondente ao país, se não tiver fica em branco
+                    if (data[1].find(o => o.code === d['id']) == undefined) {
+                        color = 'gray';
+                    }
+                    else {
+                        let line = data[1].find(o => o.code === d['id']);
+                        color = colorScale(line['score']);
+                    }
+                    return color;
+                })
+                .attr('id', function (d) { return "country" + d['id'] })
+                .attr("class", "country")
+                .style("stroke", 'black')
+                .style("stroke-width", '0.5');
+
+
+            // Cria os labels
+
+            labels = map
+                .selectAll("g")
+                .data(data[0]['features'])
+                .enter()
+                .append("g")
+                .attr("class", "countryLabel")
+                .attr("id", function (d) {
+                    return "countryLabel" + d['id'];
+                })
+                .attr("transform", function (d) {
+                    return (
+                        "translate(" + path.centroid(d)[0] + "," + path.centroid(d)[1] + ")"
+                    );
+                })
+                .on("mouseover", function (d, i) {
+                    d3.select(this).style("display", "block");
+                })
+                .on("mouseout", function (d, i) {
+                    d3.select(this).style("display", "none");
+                })
+                .on("click", function (d, i) {
+
+                    // TODO add a parte do lado
+                });
+
+
+
+
+
+
+            // Cria uma caixa com a legenda
+
+            var legend = svg
+                .append('g')
+                .attr("x", 20)
+                .attr("y", 450)
+                .attr("width", 30)
+                .attr("height", 100)
+
+            legend
+                .selectAll('rect')
+                .data(scale)
+                .enter()
+                .append('rect')
+                .attr("x", 20)
+                .attr("y", function (d, i) { return 450 + i * 20; })
+                .attr("width", 15)
+                .attr("height", 15)
+                .attr("fill", function (d, i) { return colorScale(d); })
+                .style("stroke", 'black')
+                .style("stroke-width", '0.5');
+
+            legend.selectAll('g')
+                .data(['< 3.5', '3.5 - 4', '4 - 5', '5 - 6', '6 - 6.5', '6.5 - 7', '7 - 7.5', '7.5 - 8', '> 8'])
+                .enter()
+                .append('text')
+                .text(function (d, i) { return d })
+                .attr("x", 43)
+                .attr("y", function (d, i) { return 460 + i * 20; })
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", 'black')
+                .style("font-size", '0.8em')
+                .style("font-spacing", '0.3em');
+
+            legend
+                .append("text")
+                .text('Happiness Score: ')
+                .attr("x", 19)
+                .attr("y", 435)
+                .style("fill", 'black')
+                .style("font-size", '0.9em')
+                .style("font-spacing", '0.3em');
+        }
+
+
+    </script>
 </body>
+
 </html>

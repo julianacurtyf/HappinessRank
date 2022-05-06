@@ -1,7 +1,6 @@
 // the data
 const geoMap = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
-const demographics = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv";
-const countryPoints = "https://raw.githubusercontent.com/eesur/country-codes-lat-long/master/country-codes-lat-long-alpha3.json";
+const demographics = "general.csv";
 
 // The svg
 let svg = d3.select("#my_map"),
@@ -19,15 +18,16 @@ let projection = d3.geoMercator()
     .translate([width / 2, height / 2]);
 
 let colorScale = d3.scaleThreshold()
-    .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
-    .range(d3.schemeBlues[7]);
+    .domain([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    .range(d3.schemeRdYlGn[9]);
 
 // Load dados externos para o array
 let promises = [d3.json(geoMap),
-    d3.csv(demographics, function(d) { return{code: d.code, pop:+d.pop}}),
-    d3.json(countryPoints)];
+    d3.csv(demographics, function(d) { return{country: d.Country, code: d.id, year:+d.Year, rank: +d.HappinessRank, score: +d.HappinessScore, economy: +d.Economy, health: +d.Health, freedom: +d.Freedom, generosity: +d.Generosity, trust: +d.Trust}})];
 
 Promise.all(promises).then(draw_map);
+
+console.log(promises);
 
 function draw_map(data) {
     // Desenha o mapa
@@ -46,36 +46,10 @@ function draw_map(data) {
         .attr("fill", function (d) {
             // ir buscar a linha correspondente ao país
             let line = data[1].find(o => o.code === d['id']);
-            return colorScale(line['pop']);
+            return colorScale(line['score']);
         });
 
-    // escala para os circulos mediante valor da população
-    let radScale = d3.scaleSqrt()
-        .domain(d3.extent(data[1], function(d){
-            return d['pop'];}))
-        .range([0, 20]);
-
-    // circulos com os valores da população
-    svg.selectAll("myCircles")
-        .data(data[1])
-        .enter()
-        .filter(function (d){
-            // apenas os que encontra no ficheiro dos pontos centrais
-            return data[2]["ref_country_codes"].find(o => o.alpha3 === d['code']) != undefined;})
-        .append("circle")
-        .attr("cx", function(d){
-            const country = data[2]["ref_country_codes"].find(o => o.alpha3 === d['code']);
-            return projection([country.longitude, country.latitude])[0]})
-        .attr("cy", function(d){
-            const country = data[2]["ref_country_codes"].find(o => o.alpha3 === d['code']);
-            return projection([country.longitude, country.latitude])[1]})
-        .attr("r", function(d){
-            const pop = d['pop'] || 0;
-            return radScale(pop);})
-        .attr("fill", 'black')
-        .attr('stroke', 'white')
-        .attr('stroke-width', 0.5)
-        .attr('opacity', 0.8);
+   
 
 
 }
