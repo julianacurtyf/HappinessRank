@@ -19,16 +19,16 @@
         // update the size of the map
         var w = window,
             x = w.innerWidth,
-            y = w.innerHeight;
+            y = w.innerHeight + 150;
 
         function updateWindow() {
             x = w.innerWidth;
-            y = w.innerHeight;
+            y = w.innerHeight+150;
 
             svg.attr("width", x).attr("height", y);
+            svg.select('#map').attr("width", x).attr("height", y);
         }
         d3.select(window).on('resize.updatesvg', updateWindow);
-
 
         // The svg
         let svg = d3.select("body")
@@ -42,8 +42,8 @@
         let path = d3.geoPath();
 
         let projection = d3.geoEquirectangular()
-            .scale(x * 0.15)
-            .center([-70, 50]);
+            .scale(x * 0.165)
+            .center([-55, 50]);
 
         let scale = [3.5, 4, 5, 6, 6.5, 7, 7.5, 8, 9];
 
@@ -72,7 +72,8 @@
 
 
             // Desenha o mapa
-            map = svg.append("g")
+            let map = svg.append("g")
+                .attr("id", "map")
                 .attr('width', x)
                 .attr('height', y)
                 .selectAll("path")
@@ -174,6 +175,7 @@
                 .style("fill", 'black')
                 .style("font-size", '0.9em')
                 .style("font-spacing", '0.3em');
+
         }
 
 
