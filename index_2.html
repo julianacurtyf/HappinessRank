@@ -24,9 +24,12 @@
         function updateWindow() {
             x = w.innerWidth;
             y = w.innerHeight+150;
+            let projection = d3.geoEquirectangular()
+            .scale(x * 0.165)
+            .center([-55, 50]);
 
             svg.attr("width", x).attr("height", y);
-            svg.select('#map').attr("width", x).attr("height", y);
+            svg.select('#map').attr("width", x).attr("height", y).selectAll("path").attr("d", d3.geoPath().projection(projection));
         }
         d3.select(window).on('resize.updatesvg', updateWindow);
 
