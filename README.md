@@ -1,12 +1,4 @@
-# HappinessRank
+# World Happiness
 
-Collaborating
-===============================
-    git checkout -b <branch name>   # start a new branch
-    # or you can use the command below if the branch already exists
-    #git checkout --track origin/<branch name>   # enter an already existing branch
-    git branch   # check you are in the right branch
-    <edit files>
-    git add <edited file>
-    git commit -m "message describing what you did!"
-    git push origin <branch name>
+This project consists of a world map as a visualization tool where you can access all the information regarding the World Happiness Rank from 2015 up to 2019. The main goal was to develop an interactive and dynamic visualization using d3.js, a JavaScript library. To rank the countries, several aspects were considered, namely, the economy, family, health, freedom, generosity and trust. The dataset whose the project was based on can be found in the following link: https://www.kaggle.com/datasets/unsdsn/world-happiness?select=2019.csv 
+
