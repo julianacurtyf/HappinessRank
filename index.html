@@ -2,668 +2,104 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-  <title>Interactive Map</title>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/4.5.0/d3.min.js"></script>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-  <link href="https://fonts.googleapis.com/css?family=Abril+Fatface|Yanone+Kaffeesatz:200" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      background-color: #2A2C39;
-      font-family: 'Yanone Kaffeesatz', sans-serif;
-      font-weight: 200;
-      font-size: 17px;
-    }
+    <meta charset="UTF-8">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
-    #map-holder {
-      width: 100vw;
-      height: 100vh;
-    }
+    <title>World Happiness</title>
 
-    svg {
-      fill: #165BAA;
-      /* map background colour */
-    }
+    <!-- Custom CSS styles -->
+    <link href="style.css" rel="stylesheet" type="text/css">
 
-    svg text {
-      fill: #000000;
-      /* map background colour */
-    }
-
-    .country {
-      fill: #d0d0d0;
-      /* country colour */
-      stroke: #2A2C39;
-      /* country border colour */
-      stroke-width: 1;
-      /* country border width */
-    }
-
-    .country-on {
-      fill: #651B40;
-      /* highlight colour for selected country */
-    }
-
-    .countryLabel {
-      display: none;
-      /* hide all country labels by default */
-    }
-
-    .countryName {
-      fill: #FFFAFF;
-      /* country label text colour */
-    }
-
-    .countryLabelBg {
-      fill: #165BAA;
-      /* country label background colour */
-    }
-
-    .countryLabelBg1 {
-      fill: #ffffff;
-      stroke: #2A2C39;
-      stroke-width: 1;
-      /* country label background colour */
-    }
-
-    .title {
-      font-family: 'Yanone Kaffeesatz-Bold', sans-serif;
-      font-weight: 700;
-      font-size: 1vw;
-    }
-
-    .text1 {
-      font-family: 'Yanone Kaffeesatz', sans-serif;
-      font-weight: 600;
-      font-size: 1vw;
-    }
-
-    .text2 {
-      font-family: 'Yanone Kaffeesatz', sans-serif;
-      font-weight: 600;
-      font-size: 0.8vw;
-    }
-  </style>
 </head>
 
 <body>
-  <div id="map-holder"></div>
-  <script type="text/javascript">
-
-    // DEFINE VARIABLES
-    // Define size of map group
-    // Full world map is 2:1 ratio
-    // Using 12:5 because we will crop top and bottom of map
-    w = 3000;
-    h = 1250;
-    // variables for catching min and max zoom factors
-    var minZoom;
-    var maxZoom;
-
-    // DEFINE FUNCTIONS/OBJECTS
-    // Define map projection
-    var projection = d3
-      .geoEquirectangular()
-      .center([0, 15]) // set centre to further North as we are cropping more off bottom of map
-      .scale([w / (2 * Math.PI)]) // scale to fit group width
-      .translate([w / 2, h / 2]) // ensure centred in group
-      ;
-
-    // Define map path
-    var path = d3
-      .geoPath()
-      .projection(projection)
-      ;
-
-    // Create function to apply zoom to countriesGroup
-    function zoomed() {
-      t = d3
-        .event
-        .transform
-        ;
-      countriesGroup
-        .attr("transform", "translate(" + [t.x, t.y] + ")scale(" + t.k + ")")
-        ;
-    }
-
-    // Define map zoom behaviour
-    var zoom = d3
-      .zoom()
-      .on("zoom", zoomed)
-      ;
-
-    function getTextBox(selection) {
-      selection
-        .each(function (d) {
-          d.bbox = this
-            .getBBox();
-        })
-        ;
-    }
-
-    // Function that calculates zoom/pan limits and sets zoom to default value 
-    function initiateZoom() {
-      // Define a "minzoom" whereby the "Countries" is as small possible without leaving white space at top/bottom or sides
-      minZoom = Math.max($("#map-holder").width() / w, $("#map-holder").height() / h);
-      // set max zoom to a suitable factor of this value
-      maxZoom = 20 * minZoom;
-      // set extent of zoom to chosen values
-      // set translate extent so that panning can't cause map to move out of viewport
-      zoom
-        .scaleExtent([minZoom, maxZoom])
-        .translateExtent([[0, 0], [w, h]])
-        ;
-      // define X and Y offset for centre of map to be shown in centre of holder
-      midX = ($("#map-holder").width() - minZoom * w) / 2;
-      midY = ($("#map-holder").height() - minZoom * h) / 2;
-      // change zoom transform to min zoom and centre offsets
-      svg.call(zoom.transform, d3.zoomIdentity.translate(midX, midY).scale(minZoom));
-    }
-
-    // zoom to show a bounding box, with optional additional padding as percentage of box size
-    function boxZoom(box, centroid, paddingPerc) {
-      minXY = box[0];
-      maxXY = box[1];
-      // find size of map area defined
-      zoomWidth = Math.abs(minXY[0] - maxXY[0]);
-      zoomHeight = Math.abs(minXY[1] - maxXY[1]);
-      // find midpoint of map area defined
-      zoomMidX = centroid[0];
-      zoomMidY = centroid[1];
-      // increase map area to include padding
-      zoomWidth = zoomWidth * (1 + paddingPerc / 100);
-      zoomHeight = zoomHeight * (1 + paddingPerc / 100);
-      // find scale required for area to fill svg
-      maxXscale = $("svg").width() / zoomWidth;
-      maxYscale = $("svg").height() / zoomHeight;
-      zoomScale = Math.min(maxXscale, maxYscale);
-      // handle some edge cases
-      // limit to max zoom (handles tiny countries)
-      zoomScale = Math.min(zoomScale, maxZoom);
-      // limit to min zoom (handles large countries and countries that span the date line)
-      zoomScale = Math.max(zoomScale, minZoom);
-      // Find screen pixel equivalent once scaled
-      offsetX = zoomScale * zoomMidX;
-      offsetY = zoomScale * zoomMidY;
-      // Find offset to centre, making sure no gap at left or top of holder
-      dleft = Math.min(0, $("svg").width() / 2 - offsetX);
-      dtop = Math.min(0, $("svg").height() / 2 - offsetY);
-      // Make sure no gap at bottom or right of holder
-      dleft = Math.max($("svg").width() - w * zoomScale, dleft);
-      dtop = Math.max($("svg").height() - h * zoomScale, dtop);
-      // set zoom
-      svg
-        .transition()
-        .duration(500)
-        .call(
-          zoom.transform,
-          d3.zoomIdentity.translate(dleft, dtop).scale(zoomScale)
-        );
-    }
-
-    function happyFace(group, xPos, yPos, radius) {
-
-      var arc = d3.arc()
-        .startAngle(1.2 * (Math.PI / 2))
-        .endAngle(2.8 * (Math.PI / 2))
-        .innerRadius(radius / 2)
-        .outerRadius(radius / 2.2);
-
-      group.append("circle")
-        .attr("cx", xPos)
-        .attr("cy", yPos)
-        .attr("r", radius)
-        .style("fill", "yellow");
-
-      //left eye
-      group.append("circle")
-        .attr("cx", xPos - radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //right eye
-      group.append("circle")
-        .attr("cx", xPos + radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //mouth
-      group.append("path")
-        .attr("d", arc)
-        .attr("transform", "translate(" + xPos + "," + yPos + ")");
-    }
-
-    function sadFace(group, xPos, yPos, radius) {
-
-      var arc = d3.arc()
-        .startAngle(1.2 * (Math.PI / 2))
-        .endAngle(2.8 * (Math.PI / 2))
-        .innerRadius(radius / 2.2)
-        .outerRadius(radius / 2);
-
-      group.append("circle")
-        .attr("cx", xPos)
-        .attr("cy", yPos)
-        .attr("r", radius)
-        .style("fill", "yellow");
-
-      //left eye
-      group.append("circle")
-        .attr("cx", xPos - radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //right eye
-      group.append("circle")
-        .attr("cx", xPos + radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //mouth
-      group.append("path")
-        .attr("d", arc)
-        .attr("transform", "translate(" + xPos + "," + (yPos + radius / 2) + "), rotate(180)");
-    }
-
-    function neutralFace(group, xPos, yPos, radius) {
-
-      group.append("circle")
-        .attr("cx", xPos)
-        .attr("cy", yPos)
-        .attr("r", radius)
-        .style("fill", "yellow");
-
-      //left eye
-      group.append("circle")
-        .attr("cx", xPos - radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //right eye
-      group.append("circle")
-        .attr("cx", xPos + radius / 3)
-        .attr("cy", yPos - radius / 3)
-        .attr("r", radius / 8)
-        .style("fill", "black");
-
-      //mouth
-      group.append("rect")
-        .attr("x", xPos - radius / 2)
-        .attr("y", yPos + radius / 3)
-        .attr("width", radius)
-        .attr("height", 1)
-        .style("fill", "black");
-    }
-
-    function barChart(group, data, height, width) {
-
-      // Step 2
-      var margin = 10;
-      var parseTime = d3.timeParse("%d/%m/%y");
-      var labels = ['Economy', 'Family', 'Health', 'Freedom', 'Trust', 'Generosity', 'DystopiaResidual'];
-      var time = ['2015', '2016'];
-
-      var colors = ["#0B1354", "#165BAA", "#651B40", "#A155B9", "#F765A3", "#FFA4B6", "#F9D1D1"];
-
-      data = data.map(function (d) {
-        return { Time: parseTime(d.Time).getUTCFullYear(), Economy: +d.Economy, Family: +d.Family, Health: +d.Health, Freedom: +d.Freedom, Trust: +d.Trust, Generosity: +d.Generosity, DystopiaResidual: +d.DystopiaResidual };
-      });
-
-      stack = d3.stack().keys(labels)
-
-      stack.value(function (d, key) {
-        return d[key];
-      });
-
-      dataset = stack(data);
-
-      dataset.forEach(level => {
-        var cont = 0;
-        level.forEach(year => {
-          if (cont == 0) {
-            year.push('2015');
-            cont = 1;
-          }
-          else if (cont == 1) {
-            year.push('2016');
-          }
-        })
-      })
-
-      console.log(dataset);
-
-      var xScale = d3.scaleBand()
-        .domain(time)
-        .rangeRound([0, width], 5)
-        .padding(.5);
-
-      var yScale = d3.scaleLinear()
-        .domain([0, 10])
-        .range([height, 0]);
-
-      var yAxis = d3.axisLeft(yScale);
-
-      var xAxis = d3.axisBottom(xScale);
-
-      group.append("g")
-        .attr("class", "y axis")
-        .attr("transform", "translate(70," + 70 + ")")
-        .call(yAxis);
-
-      group.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(70," + (height + 70) + ")")
-        .call(xAxis);
-
-      // X label
-      group.append('text')
-        .attr('x', width / 2)
-        .attr('y', height + 30)
-        .attr('text-anchor', 'middle')
-        .style('font-family', 'Helvetica')
-        .style('font-size', 12)
-        .attr("transform", "translate(70,70)")
-        .text('Year');
-
-      // Y label
-      group.append('text')
-        .attr('text-anchor', 'middle')
-        .attr('transform', 'translate(40,' + (height / 2 + 70) + ')rotate(-90)')
-        .style('font-family', 'Helvetica')
-        .style('font-size', 12)
-        .text('Happiness Score');
-
-      var groupsBar = group.selectAll("g.bars")
-        .data(dataset)
-        .enter().append("g")
-        .attr("class", "bars")
-        .style("fill", function (d, i) { return colors[i]; });
-
-      var rect = groupsBar.selectAll("rect")
-        .data(function (d) { return d; })
-        .enter()
-        .append("rect")
-        .attr("x", function (d) { return xScale(d[2]); })
-        .attr("y", function (d) { return yScale(d[1]); })
-        .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
-        .attr("width", xScale.bandwidth())
-        .attr("transform", "translate(70,70)")
-
-      groupsBar.selectAll("text")
-        .data(labels)
-        .enter()
-        .append("text")
-        .text(function (d, i) { return d })
-        .attr("x", function (d, i) { return i * 20; })
-        .attr("y", 10)
-        .attr("transform", "translate(80,90)")
-        .style("fill", function (d, i) { return colors[i] })
-        .style("font-size", '0.3em')
-        .style("font-spacing", '0.2em');
-
-      groupsBar
-        .append("text")
-        .text('Scores: ')
-        .attr("x", 0)
-        .attr("y", 10)
-        .attr("transform", "translate(80,80)")
-        .style("fill", 'black')
-        .style("font-size", '0.5em')
-        .style("font-spacing", '0.3em');
-
-    }
-
-    function functionName(selected) {
-
-      d3.csv('HappinessRanking.csv', function (a, i) {
-
-        var box = d3
-          .select("#countryLabel" + selected.properties.iso_a3)
-          .append('svg');
-
-        var objArray = [];
-        var HappinessRank = [];
-
-        i.forEach(obj => {
-
-          if (obj.Country == selected.properties.name) {
-
-            objArray.push(obj);
-            HappinessRank.push(obj.HappinessRank);
-
-            console.log(objArray);
-
-          };
-        })
-
-        if (HappinessRank.length == 0){
-          HappinessRank.push(' ');
-          HappinessRank.push(' ');
-        }
-
-        box.insert("rect", "text")
-          .attr("class", "countryLabelBg1")
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .attr("width", 250)
-          .attr("height", 260)
-          .attr('rx', 10)
-          .attr('ry', 10);
-
-
-        if (parseInt(HappinessRank[0]) < 30) {
-          happyFace(box, 220, 25, 15);
-        }
-        else if (parseInt(HappinessRank[0]) < 70) {
-          neutralFace(box, 220, 25, 15);
-        }
-        else {
-          sadFace(box, 220, 25, 15);
-        }
-
-
-        box
-          .insert('text')
-          .attr('x', 30)
-          .attr('y', 25)
-          .attr('class', 'title')
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .text('Happiness Rank');
-
-        box.append("rect")
-          .attr("x", 0)
-          .attr("y", 38)
-          .attr("width", 250)
-          .attr("height", 1)
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .style("fill", "black");
-
-        box
-          .insert('text')
-          .attr('x', 155)
-          .attr('y', 60)
-          .attr('class', 'text1')
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .text('2015');
-
-        box
-          .insert('text')
-          .attr('x', 200)
-          .attr('y', 60)
-          .attr('class', 'text1')
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .text('2016');
-
-        box
-          .insert('text')
-          .attr('x', 165)
-          .attr('y', 80)
-          .attr('class', 'text2')
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .text(HappinessRank[0] + '°');
-
-        box
-          .insert('text')
-          .attr('x', 205)
-          .attr('y', 80)
-          .attr('class', 'text2')
-          .attr("transform", function (d) {
-            return "translate(" + (-d.bbox.x / 2) + "," + (-d.bbox.y / 2) + ")";
-          })
-          .text(HappinessRank[1] + '°');
-
-        barChart(box, objArray, 150, 150)
-      });
-
-    }
-
-    // on window resize
-    $(window).resize(function () {
-      // Resize SVG
-      svg
-        .attr("width", $("#map-holder").width())
-        .attr("height", $("#map-holder").height())
-        ;
-      initiateZoom();
-    });
-
-    // create an SVG
-    var svg = d3
-      .select("#map-holder")
-      .append("svg")
-      // set to the same size as the "map-holder" div
-      .attr("width", $("#map-holder").width())
-      .attr("height", $("#map-holder").height())
-      // add zoom functionality
-      .call(zoom)
-      ;
-
-
-    // get map data
-    d3.json(
-      "https://raw.githubusercontent.com/andybarefoot/andybarefoot-www/master/maps/mapdata/custom50.json",
-      function (json) {
-        //Bind data and create one path per GeoJSON feature
-        countriesGroup = svg.append("g").attr("id", "map");
-        // add a background rectangle
-        countriesGroup
-          .append("rect")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("width", w)
-          .attr("height", h);
-
-        // draw a path for each feature/country
-        countries = countriesGroup
-          .selectAll("path")
-          .data(json.features)
-          .enter()
-          .append("path")
-          .attr("d", path)
-          .attr("id", function (d, i) {
-            return "country" + d.properties.iso_a3;
-          })
-          .attr("class", "country")
-          //      .attr("stroke-width", 10)
-          //      .attr("stroke", "#ff0000")
-          // add a mouseover action to show name label for feature/country
-          .on("mouseover", function (d, i) {
-            d3.select("#countryLabel" + d.properties.iso_a3).style("display", "block");
-          })
-          .on("mouseout", function (d, i) {
-            d3.select("#countryLabel" + d.properties.iso_a3).style("display", "none");
-          })
-          // add an onclick action to zoom into clicked country
-          .on("click", function (d, i) {
-            d3.selectAll(".country").classed("country-on", false);
-            d3.select(this).classed("country-on", true);
-            boxZoom(path.bounds(d), path.centroid(d), 20);
-          });
-        // Add a label group to each feature/country. This will contain the country name and a background rectangle
-        // Use CSS to have class "countryLabel" initially hidden
-        countryLabels = countriesGroup
-          .selectAll("g")
-          .data(json.features)
-          .enter()
-          .append("g")
-          .attr("class", "countryLabel")
-          .attr("id", function (d) {
-            return "countryLabel" + d.properties.iso_a3;
-          })
-          .attr("transform", function (d) {
-            return (
-              "translate(" + path.centroid(d)[0] + "," + path.centroid(d)[1] + ")"
-            );
-          })
-          // add mouseover functionality to the label
-          .on("mouseover", function (d, i) {
-            d3.select(this).style("display", "block");
-          })
-          .on("mouseout", function (d, i) {
-            d3.select(this).style("display", "none");
-          })
-
-          // add an onclick action to zoom into clicked country
-          .on("click", function (d, i) {
-            d3.selectAll(".country").classed("country-on", false);
-            d3.select("#country" + d.properties.iso_a3).classed("country-on", true);
-            boxZoom(path.bounds(d), path.centroid(d), 200);
-
-            //TODO add whatever we want here
-
-            functionName(d);
-          });
-
-        // add the text to the label group showing country name
-        countryLabels
-          .append("text")
-          .attr("class", "countryName")
-          .style("text-anchor", "middle")
-          .attr("dx", 0)
-          .attr("dy", 0)
-          .text(function (d) {
-            return d.properties.name;
-          })
-          .call(getTextBox);
-        // add a background rectangle the same size as the text
-        countryLabels
-          .insert("rect", "text")
-          .attr("class", "countryLabelBg")
-          .attr("transform", function (d) {
-            return "translate(" + (d.bbox.x - 5) + "," + (d.bbox.y - 3) + ")";
-          })
-          .attr("width", function (d) {
-            return d.bbox.width + 10;
-          })
-          .attr("height", function (d) {
-            return d.bbox.height + 6;
-          });
-
-        countryBox = countryLabels
-          .selectAll("countryLabelBg1")
-
-        initiateZoom();
-      }
-    );
-  </script>
+    <h2 id="titulo">World Happiness</h2>
+
+    <div class="flex-row">
+        <div id="svg-map"></div>
+
+        <div id="tooltip">
+            <span id="country"></span>
+        </div>
+
+        <div id="menu">
+            <h2 class="menu">Analysis</h2>
+            <h3>Happiness Score over the years</h3>
+            <svg id="linechart"></svg>
+            <svg id="linechart2"></svg>
+            <div id="idx">
+                <h3 id="ranking">Ranking</h3>
+                <h3 id="filter">Filter</h3>
+                <div class="flex-row">
+                    <svg id="rank"></svg>
+                    <div id="checks">
+                        <div>
+                            <input type="checkbox" id="economy" name="economy" value="Economy">
+                            <label for="economy"> Economy</label><br>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="family" name="family" value="Family">
+                            <label for="economy">Family</label><br>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="health" name="health" value="Health">
+                            <label for="economy"> Health</label><br>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="freedom" name="freedom" value="Freedom">
+                            <label for="economy">Freedom</label><br>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="generosity" name="generosity" value="Generosity">
+                            <label for="economy">Generosity</label><br>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="trust" name="trust" value="Trust">
+                            <label for="economy">Trust</label><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script> 
 </body>
+
+<footer class="footer">
+    <!-- Grid container -->
+    <div class="footer-info">
+        <!--Grid row-->
+        <div class="row">
+            <!--Grid column-->
+            <div class="grid">
+                <h5 class="text-uppercase">INFORMATION VISUALIZATION</h5>
+                <p>
+                    Course of Master's degree in Design and Multimedia<br>
+                    Professors in charge: Catarina Maçãs and Evgheni Polisciuc<br>
+                    Department of Informatics Engineering
+                </p>
+            </div>
+            <!--Grid column-->
+
+            <!--Grid column-->
+            <div class="grid">
+                <h5 class="text-uppercase">DESIGN AND CODE</h5>
+                <p>
+                    Designed by master's students Juliana Curty and Sara Costa<br>
+                    For a project of Information Visualization<br>
+                    Proposal by the professors, for the course's project.
+                </p>
+            </div>
+            <!--Grid column-->
+        </div>
+        <!--Grid row-->
+    </div>
+    <!-- Grid container -->
+    <div class="footer-cr">
+        © 2022 University of Coimbra
+    </div>
+</footer>
 
 </html>

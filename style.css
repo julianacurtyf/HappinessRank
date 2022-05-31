@@ -1,0 +1,187 @@
+body {
+  background: #2E353E;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  margin-top: 5px;
+}
+
+svg {
+  margin-top: 70px;
+  position: center;
+  stroke-width: 1;
+}
+
+.svg-map {
+  flex: 3;
+}
+
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h2 {
+  position: absolute;
+  width: 306px;
+  height: 50px;
+  margin: 5;
+  font-family: 'Caudex';
+  font-style: normal;
+  font-weight: 700;
+  font-size: 35px;
+  line-height: 30px;
+  text-align: center;
+  color: #E5E5E5;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+h2.menu{
+  font-size: 27px;
+  padding: 15px;
+  left: 45px;
+  top: 5px;
+}
+h3 {
+  position: absolute;
+  width: 300px;
+  height: 25px;
+  top: 105px;
+  left: 15px;
+  margin: 5;
+  font-family: Arial, Helvetica, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 15px;
+  
+  line-height: 10px;
+  text-align: center;
+  color: #E5E5E5;
+}
+
+text{
+  text-shadow: none;
+
+}
+div#tooltip {
+  position: fixed;
+  font-weight: bold;
+  text-align: left;
+  padding: 0.5rem;
+  border: 0.5px solid silver;
+  color: black;
+  background: #fff;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px 0px #a6a6a6;
+  opacity: 0;
+  font-size: 0.8rem;
+}
+
+div#menu {
+  position: absolute;
+  border: 0.5px solid white;
+  color: black;
+  background: #2E353E;
+  opacity: 0;
+  font-size: 0.8rem;
+  top: 0px;
+  align-content: center;
+  align-self: center;
+  padding-top: 10px;
+}
+
+div#idx {
+  position: absolute;
+}
+#ranking{
+  position: absolute;
+  top: -70px;
+  text-align:left;
+  padding-left: 45px;
+  font-size: 20px;
+}
+#checks {
+  position: absolute;
+  width: 100px;
+  height: 200px;
+  left: 200px;
+  padding-left: 70px;
+  display: flex;
+  flex-wrap: wrap;
+  font-family: Arial, Helvetica, sans-serif;
+  align-content: space-around;
+  color: #fff;
+  font-size: 1.2em;
+}
+#filter{
+  top: -70px;
+  text-align:right;
+  padding-left: 45px;
+  font-size: 20px;
+}
+svg#linechart {
+  color: white;
+  margin: 2px;
+}
+
+svg#linechart2 {
+  color: white;
+  margin: 2px;
+}
+
+
+.rect {
+  align-content: space-between;
+  padding: 20px;
+  margin: 20px;
+}
+
+.menu {
+  position: absolute;
+  margin: 5px;
+  padding: 30px;
+  font-family: 'Caudex';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 30px;
+
+  color: #E5E5E5;
+
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Para o footer com a informação*/
+.footer {
+  border-top: 1px solid silver;
+  color: #fff;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 1rem;
+  /*padding: 0.5rem;*/
+}
+
+.footer-info {
+  padding-bottom: 1.5625rem;
+  flex-wrap: wrap;
+
+}
+
+.footer-cr {
+  padding: 1rem;
+}
+
+div.row {
+  display: flex;
+  font-size: 1.2rem;
+  text-align: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+div.grid {
+  align-items: center;
+  padding-left: 4rem;
+  padding-right: 4rem;
+  flex-wrap: wrap;
+}
